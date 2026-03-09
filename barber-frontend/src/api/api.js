@@ -1,20 +1,44 @@
 import axios from 'axios';
 
-// Creiamo un'istanza di Axios configurata per il tuo backend Spring Boot
 const api = axios.create({
-    baseURL: 'http://localhost:8080/api', // Assicurati che la porta sia quella corretta del backend
+    baseURL: 'http://localhost:8080/api',
+    headers: {
+        'Content-Type': 'application/json',
+    },
 });
 
-// Questo interceptor aggiunge AUTOMATICAMENTE il token JWT ad ogni chiamata
-// Così non dobbiamo scriverlo a mano ogni volta che vogliamo prenotare o aggiungere un barbiere
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+/**
+ * REQUEST INTERCEPTOR:
+ * Inserisce automaticamente il JWT nell'Header Authorization
+ * per ogni chiamata in uscita.
+ */
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+/**
+ * RESPONSE INTERCEPTOR:
+ * Gestisce le risposte dal server. Se riceviamo un 401 (Token scaduto o non valido),
+ * facciamo il logout automatico per sicurezza.
+ */
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            console.warn("Sessione scaduta o non autorizzata. Reindirizzamento al login...");
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            // Opzionale: window.location.href = '/login';
+        }
+        return Promise.reject(error);
     }
-    return config;
-}, (error) => {
-    return Promise.reject(error);
-});
+);
 
 export default api;

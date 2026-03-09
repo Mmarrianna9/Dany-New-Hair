@@ -15,11 +15,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.Map;
 
 @RestController
-@RequestMapping("/auth") // Nota: il prefisso /api è già gestito dal context-path nel properties
+@RequestMapping("/auth")
+@CrossOrigin(origins = "http://localhost:5173")
 public class AuthController {
 
     @Autowired
@@ -33,6 +35,8 @@ public class AuthController {
 
     @Autowired
     private JwtUtils jwtUtils;
+
+    
 
     // 1. REGISTRAZIONE
     @PostMapping("/signup")
